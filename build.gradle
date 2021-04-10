@@ -78,8 +78,9 @@ mixin {
 dependencies {
     minecraft "net.minecraftforge:forge:${config.mc_version}-${config.forge_version}"
 
-    annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
+    annotationProcessor "org.spongepowered:mixin:0.8.2:processor"
 
+    // This is here so we have some modded items to test on.
     implementation fg.deobf("com.ferreusveritas.dynamictrees:DynamicTrees-1.16.5:0.2.0")
 }
 
@@ -90,7 +91,7 @@ jar {
             "Specification-Vendor": "Harley O'Connor",
             "Specification-Version": "1",
             "Implementation-Title": project.name,
-            "Implementation-Version": config.mc_version,
+            "Implementation-Version": version,
             "Implementation-Vendor": "Harley O'Connor",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
             "MixinConfigs": "${config.mod_id}.mixins.json"
@@ -100,10 +101,37 @@ jar {
 
 jar.finalizedBy('reobfJar')
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifact jar
+            from components.java
+
+            pom {
+                url = 'https://github.com/Harleyoc1/SuggestionProviderFix'
+                licenses {
+                    license {
+                        name = 'MIT'
+                        url = 'https://mit-license.org'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'harleyoconnor'
+                        name = 'Harley O\'Connor'
+                        email = 'harleyoc1@gmail.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/Harleyoc1/SuggestionProviderFix.git'
+                    developerConnection = 'scm:git:ssh://github.com/Harleyoc1/SuggestionProviderFix.git'
+                    url = 'https://github.com/Harleyoc1/SuggestionProviderFix'
+                }
+            }
         }
     }
     repositories {

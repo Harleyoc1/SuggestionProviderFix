@@ -18,3 +18,29 @@ This also works with other registries that use "resource locations", including b
 
 ## Technical Description
 This mod uses a mixin to overwrite `ISuggestionProvider#filterResources(Iterable, String, Function, Consumer)`, doing exactly the same thing but negating a check on whether or not the `namespace` of the `ResourceLocation` is `minecraft` (since this is the default when a path is typed without a namespace). This means that suggestion providers for `ResourceLocation` objects will suggest all paths matching the input string if no namespace was entered, instead of only from Minecraft itself.
+
+## Gradle Setup
+This is likely to be a useful tool in the dev environment, so I've added it to my maven repository. First, add my maven repository to the `repositories` section:
+
+```groovy
+repositories {
+    maven {
+        url "http://harleyoconnor.com/maven"
+    }
+}
+```
+
+Then, add the dependency:
+
+```groovy
+dependencies {
+    // At runtime, use suggestion provider fix mod. 
+    runtimeOnly fg.deobf("com.harleyoconnor.suggestionproviderfix:SuggestionProviderFix:1.16.5-1.0.0")
+}
+```
+
+Next, you will need to add the following property to your run tasks (such as your `minecraft { runs { client { } } }` section).
+
+```groovy
+properties 'mixin.env.disableRefMap' : 'true'
+```
