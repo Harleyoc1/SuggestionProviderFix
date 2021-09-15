@@ -17,7 +17,7 @@ With this mod installed, you are able to start typing `oak_seed` and any items w
 This also works with other registries that use "resource locations", including blocks, biomes, and even custom registries from other mods. 
 
 ## Technical Description
-This mod uses a coremod to remove instructions from `SharedSuggestionProvider#filterResources(Iterable, String, Function, Consumer)` which check the `namespace` of the `ResourceLocation` is `minecraft` (since this is the default when a path is typed without a namespace). This means that suggestion providers for `ResourceLocation` objects will suggest all paths matching the input string if no namespace was entered, instead of only from Minecraft itself.
+This mod uses a mixin to overwrite SharedSuggestionProvider#filterResources(Iterable, String, Function, Consumer), doing exactly the same thing but negating a check on whether or not the namespace of the `ResourceLocation` is `minecraft` (since this is the default when a path is typed without a namespace). This means that suggestion providers for `ResourceLocation` objects will suggest all paths matching the input string if no namespace was entered, instead of only from Minecraft itself.
 
 ## Gradle Setup
 This is likely to be a useful tweak in the dev environment, so I've added it to my maven repository. First, add my maven repository to the `repositories` block:
