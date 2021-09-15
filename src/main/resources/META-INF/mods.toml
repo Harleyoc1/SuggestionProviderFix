@@ -1,28 +1,28 @@
 modLoader="javafml"
-loaderVersion="[36,)"
+loaderVersion="[37,)"
 license="MIT"
 
 [[mods]]
 modId="suggestionproviderfix"
 version="${file.jarVersion}"
 displayName="Suggestion Provider Fix"
-updateJSONURL="https://github.com/Harleyoc1/SuggestionProviderFix/blob/1.16.5/version_info.json?raw=true"
+updateJSONURL="https://github.com/Harleyoc1/SuggestionProviderFix/blob/1.17.1/version_info.json?raw=true"
 displayURL="https://www.curseforge.com/minecraft/mc-mods/suggestion-provider-fix"
 credits=""
 authors="Harley O'Connor"
 description='''
-A minor change to Minecraft's suggestion provider so that it auto-completes resource locations for all mod namespaces.
+A minor change to Minecraft's suggestion provider so that it auto-completes locations for all moded resources.
 '''
 
 [[dependencies.suggestionproviderfix]]
     modId="forge"
     mandatory=true
-    versionRange="[36,)"
+    versionRange="[37.0.60,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.suggestionproviderfix]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.16.5,1.17)"
+    versionRange="[1.17.1,1.18)"
     ordering="NONE"
     side="BOTH"

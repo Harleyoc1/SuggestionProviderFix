@@ -1,10 +1,10 @@
 {
   "required": true,
   "package": "com.harleyoconnor.suggestionproviderfix.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_16",
   "refmap": "suggestionproviderfix.refmap.json",
   "mixins": [
-    "ISuggestionProviderMixin"
+    "SharedSuggestionProviderMixin"
   ],
-  "minVersion": "0.8"
+  "minVersion": "0.8.4"
 }

@@ -10,6 +10,7 @@ fun property(key: String) = project.findProperty(key).toString()
 plugins {
     id("java")
     id("net.minecraftforge.gradle")
+    id("org.parchmentmc.librarian.forgegradle")
     id("org.spongepowered.mixin")
     id("idea")
     id("maven-publish")
@@ -29,8 +30,7 @@ version = "$mcVersion-$modVersion"
 group = property("group")
 
 minecraft {
-    mappings("official", mcVersion)
-    accessTransformer(file("src/main/resources/META-INF/accesstransformer.cfg"))
+    mappings("parchment", "${property("mappingsVersion")}-$mcVersion")
 
     runs {
         create("client") {
@@ -39,6 +39,7 @@ minecraft {
             property("forge.logging.markers", "SCAN,REGISTRIES,REGISTRYDUMP")
             property("forge.logging.console.level", "debug")
 
+            property("mixin.debug.export", "true")
             property("mixin.env.remapRefMap", "true")
             property("mixin.env.refMapRemappingFile", "${buildDir}/createSrgToMcp/output.srg")
 
@@ -51,6 +52,8 @@ minecraft {
             if (project.hasProperty("mcAccessToken")) {
                 args("--accessToken", property("mcAccessToken"))
             }
+
+            args("-mixin.config=$modId.mixins.json")
 
             mods {
                 create(modId) {
@@ -65,8 +68,11 @@ minecraft {
             property("forge.logging.markers", "SCAN,REGISTRIES,REGISTRYDUMP")
             property("forge.logging.console.level", "debug")
 
+            property("mixin.debug.export", "true")
             property("mixin.env.remapRefMap", "true")
             property("mixin.env.refMapRemappingFile", "${buildDir}/createSrgToMcp/output.srg")
+
+            args("-mixin.config=$modId.mixins.json")
 
             mods {
                 create(modId) {
@@ -81,8 +87,11 @@ minecraft {
             property("forge.logging.markers", "SCAN,REGISTRIES,REGISTRYDUMP")
             property("forge.logging.console.level", "debug")
 
+            property("mixin.debug.export", "true")
             property("mixin.env.remapRefMap", "true")
             property("mixin.env.refMapRemappingFile", "${buildDir}/createSrgToMcp/output.srg")
+
+            args("-mixin.config=$modId.mixins.json")
 
             args("--mod", modId, "--all", "--output", file("src/generated/resources/"), "--existing", file("src/main/resources"))
 
@@ -104,13 +113,9 @@ mixin {
 }
 
 dependencies {
-    // Not sure if we need this one, what is a "forge" anyway?
     minecraft("net.minecraftforge:forge:$mcVersion-${property("forgeVersion")}")
 
-    annotationProcessor("org.spongepowered:mixin:0.8.2:processor")
-
-    // This is here so we have some modded items to test on.
-    implementation(fg.deobf("com.ferreusveritas.dynamictrees:DynamicTrees-1.16.5:0.10.0-Beta24"))
+    annotationProcessor("org.spongepowered:mixin:${property("mixinVersion")}:processor")
 }
 
 tasks.jar {
@@ -130,11 +135,10 @@ tasks.jar {
 }
 
 java {
-    withJavadocJar()
     withSourcesJar()
 
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(8))
+        languageVersion.set(JavaLanguageVersion.of(16))
     }
 }
 
@@ -169,7 +173,6 @@ curseforge {
         changelogType = "markdown"
         releaseType = property("curseFileType")
 
-        addArtifact(tasks.findByName("javadocJar"))
         addArtifact(tasks.findByName("sourcesJar"))
     }
 }
