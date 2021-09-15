@@ -20,27 +20,42 @@ This also works with other registries that use "resource locations", including b
 This mod uses a coremod to remove instructions from `SharedSuggestionProvider#filterResources(Iterable, String, Function, Consumer)` which check the `namespace` of the `ResourceLocation` is `minecraft` (since this is the default when a path is typed without a namespace). This means that suggestion providers for `ResourceLocation` objects will suggest all paths matching the input string if no namespace was entered, instead of only from Minecraft itself.
 
 ## Gradle Setup
-This is likely to be a useful tweak in the dev environment, so I've added it to my maven repository. First, add my maven repository to the `repositories` section:
+This is likely to be a useful tweak in the dev environment, so I've added it to my maven repository. First, add my maven repository to the `repositories` block:
 
+#### Groovy `build.gradle`
 ```groovy
-repositories {
-    maven {
-        url "http://harleyoconnor.com/maven"
-    }
+maven {
+    url "https://harleyoconnor.com/maven"
 }
 ```
 
-Then, add the dependency:
-
-```groovy
-dependencies {
-    // At runtime, use suggestion provider fix mod. 
-    runtimeOnly fg.deobf("com.harleyoconnor.suggestionproviderfix:SuggestionProviderFix:1.16.5-1.0.0")
-}
+#### Kotlin `build.gradle.kts`
+```kotlin
+maven("https://harleyoconnor.com/maven")
 ```
 
-Next, you will need to add the following property to your run tasks (such as your `minecraft { runs { client { } } }` section).
+Next, add it as a runtime dependency in the `dependecies` block:
 
+#### Groovy `build.gradle`
 ```groovy
-properties 'mixin.env.disableRefMap' : 'true'
+runtimeOnly fg.deobf("com.harleyoconnor.suggestionproviderfix:SuggestionProviderFix:1.16.5-1.0.0")
+```
+
+#### Kotlin `build.gradle.kts`
+```kotlin
+runtimeOnly(fg.deobf("com.harleyoconnor.suggestionproviderfix:SuggestionProviderFix:1.16.5-1.0.0"))
+```
+
+Finally, you will need to add the following properties to each of your run tasks (under the `minecraft` -> `runs` -> `client` / `server` / `data` blocks):
+
+#### Groovy `build.gradle`
+```groovy
+property 'mixin.env.remapRefMap', 'true'
+property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
+```
+
+#### Kotlin `build.gradle.kts`
+```kotlin
+property("mixin.env.remapRefMap", "true")
+property("mixin.env.refMapRemappingFile", "${buildDir}/createSrgToMcp/output.srg")
 ```
