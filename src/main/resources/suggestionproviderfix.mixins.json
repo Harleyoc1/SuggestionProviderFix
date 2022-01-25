@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "com.harleyoconnor.suggestionproviderfix.mixin",
-  "compatibilityLevel": "JAVA_16",
+  "compatibilityLevel": "JAVA_17",
   "refmap": "suggestionproviderfix.refmap.json",
   "mixins": [
     "SharedSuggestionProviderMixin"
