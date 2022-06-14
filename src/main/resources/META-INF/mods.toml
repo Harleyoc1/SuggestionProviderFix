@@ -6,7 +6,7 @@ license="MIT"
 modId="suggestionproviderfix"
 version="${file.jarVersion}"
 displayName="Suggestion Provider Fix"
-updateJSONURL="https://github.com/Harleyoc1/SuggestionProviderFix/blob/1.18.1/version_info.json?raw=true"
+updateJSONURL="https://github.com/Harleyoc1/SuggestionProviderFix/blob/1.19/version_info.json?raw=true"
 displayURL="https://www.curseforge.com/minecraft/mc-mods/suggestion-provider-fix"
 credits=""
 authors="Harley O'Connor"
@@ -23,6 +23,6 @@ A minor change to Minecraft's suggestion provider so that it auto-completes loca
 [[dependencies.suggestionproviderfix]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.18.1,1.19)"
+    versionRange="[1.19,1.20)"
     ordering="NONE"
     side="BOTH"

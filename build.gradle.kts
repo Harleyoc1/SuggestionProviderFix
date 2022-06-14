@@ -30,7 +30,7 @@ version = "$mcVersion-$modVersion"
 group = property("group")
 
 minecraft {
-    mappings("parchment", "${property("mappingsVersion")}-$mcVersion")
+    mappings("parchment", "${property("mappingsVersion")}-1.18.2")
 
     runs {
         create("client") {
