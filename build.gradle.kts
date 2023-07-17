@@ -6,14 +6,19 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 
 fun property(key: String) = project.findProperty(key).toString()
+fun optionalProperty(key: String) = project.findProperty(key)?.toString()
+
+apply(from = "https://gist.githubusercontent.com/Harleyoc1/4d23d4e991e868d98d548ac55832381e/raw/applesiliconfg.gradle")
 
 plugins {
     id("java")
     id("net.minecraftforge.gradle")
+    id("org.parchmentmc.librarian.forgegradle")
     id("org.spongepowered.mixin")
     id("idea")
     id("maven-publish")
     id("com.matthewprenger.cursegradle") version "1.4.0"
+    id("com.modrinth.minotaur") version "2.+"
 }
 
 repositories {
@@ -29,7 +34,7 @@ version = "$mcVersion-$modVersion"
 group = property("group")
 
 minecraft {
-    mappings("official", mcVersion)
+    mappings("parchment", "${property("mappingsVersion")}-$mcVersion")
     accessTransformer(file("src/main/resources/META-INF/accesstransformer.cfg"))
 
     runs {
@@ -107,7 +112,7 @@ dependencies {
     // Not sure if we need this one, what is a "forge" anyway?
     minecraft("net.minecraftforge:forge:$mcVersion-${property("forgeVersion")}")
 
-    annotationProcessor("org.spongepowered:mixin:0.8.2:processor")
+    annotationProcessor("org.spongepowered:mixin:${property("mixinVersion")}:processor")
 
     // This is here so we have some modded items to test on.
     implementation(fg.deobf("com.ferreusveritas.dynamictrees:DynamicTrees-1.16.5:0.10.0-Beta24"))
@@ -138,23 +143,19 @@ java {
     }
 }
 
-fun readChangelog(): String? {
+fun readRawChangelog(): String? {
     val versionInfoFile = file("version_info.json")
     val jsonObject = Gson().fromJson(InputStreamReader(versionInfoFile.inputStream()), JsonObject::class.java)
     return jsonObject
-        .get(mcVersion)?.asJsonObject
+        ?.get(mcVersion)?.asJsonObject
         ?.get(project.version.toString())?.asString
 }
 
-tasks.withType(CurseUploadTask::class.java) {
-    onlyIf {
-        project.hasProperty("curseApiKey") && project.hasProperty("curseFileType")
-    }
-}
+val rawChangelog = readRawChangelog()!!
 
 curseforge {
-    if (!project.hasProperty("curseApiKey") || !project.hasProperty("curseFileType")) {
-        project.logger.log(LogLevel.WARN, "API Key or file type for CurseForge not detected; uploading will be disabled.")
+    if (!project.hasProperty("curseApiKey")) {
+        project.logger.warn("API Key for CurseForge not detected; uploading will be disabled.")
         return@curseforge
     }
 
@@ -165,13 +166,27 @@ curseforge {
 
         addGameVersion(mcVersion)
 
-        changelog = readChangelog() ?: "No changelog provided."
+        changelog = rawChangelog
         changelogType = "markdown"
-        releaseType = property("curseFileType")
+        releaseType = optionalProperty("versionType") ?: "release"
 
-        addArtifact(tasks.findByName("javadocJar"))
         addArtifact(tasks.findByName("sourcesJar"))
     }
+}
+
+modrinth {
+    if (!project.hasProperty("modrinthToken")) {
+        project.logger.warn("Token for Modrinth not detected; uploading will be disabled.")
+        return@modrinth
+    }
+
+    token.set(property("modrinthToken"))
+    projectId.set(modId)
+    versionNumber.set("$mcVersion-$modVersion")
+    versionType.set(optionalProperty("versionType") ?: "release")
+    uploadFile.set(tasks.jar.get())
+    gameVersions.add(mcVersion)
+    changelog.set(rawChangelog)
 }
 
 tasks.withType<GenerateModuleMetadata> {
