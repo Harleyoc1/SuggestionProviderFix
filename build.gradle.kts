@@ -6,6 +6,7 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 
 fun property(key: String) = project.findProperty(key).toString()
+fun optionalProperty(key: String) = project.findProperty(key)?.toString()
 
 plugins {
     id("java")
@@ -15,6 +16,7 @@ plugins {
     id("idea")
     id("maven-publish")
     id("com.matthewprenger.cursegradle") version "1.4.0"
+    id("com.modrinth.minotaur") version "2.+"
 }
 
 repositories {
@@ -30,7 +32,7 @@ version = "$mcVersion-$modVersion"
 group = property("group")
 
 minecraft {
-    mappings("parchment", "${property("mappingsVersion")}-1.18.2")
+    mappings("parchment", property("mappingsVersion"))
 
     runs {
         create("client") {
@@ -142,23 +144,19 @@ java {
     }
 }
 
-fun readChangelog(): String? {
+fun readRawChangelog(): String? {
     val versionInfoFile = file("version_info.json")
     val jsonObject = Gson().fromJson(InputStreamReader(versionInfoFile.inputStream()), JsonObject::class.java)
     return jsonObject
-        .get(mcVersion)?.asJsonObject
+        ?.get(mcVersion)?.asJsonObject
         ?.get(project.version.toString())?.asString
 }
 
-tasks.withType(CurseUploadTask::class.java) {
-    onlyIf {
-        project.hasProperty("curseApiKey") && project.hasProperty("curseFileType")
-    }
-}
+val rawChangelog = readRawChangelog()!!
 
 curseforge {
-    if (!project.hasProperty("curseApiKey") || !project.hasProperty("curseFileType")) {
-        project.logger.log(LogLevel.WARN, "API Key or file type for CurseForge not detected; uploading will be disabled.")
+    if (!project.hasProperty("curseApiKey")) {
+        project.logger.warn("API Key for CurseForge not detected; uploading will be disabled.")
         return@curseforge
     }
 
@@ -169,12 +167,27 @@ curseforge {
 
         addGameVersion(mcVersion)
 
-        changelog = readChangelog() ?: "No changelog provided."
+        changelog = rawChangelog
         changelogType = "markdown"
-        releaseType = property("curseFileType")
+        releaseType = optionalProperty("versionType") ?: "release"
 
         addArtifact(tasks.findByName("sourcesJar"))
     }
+}
+
+modrinth {
+    if (!project.hasProperty("modrinthToken")) {
+        project.logger.warn("Token for Modrinth not detected; uploading will be disabled.")
+        return@modrinth
+    }
+
+    token.set(property("modrinthToken"))
+    projectId.set(modId)
+    versionNumber.set("$mcVersion-$modVersion")
+    versionType.set(optionalProperty("versionType") ?: "release")
+    uploadFile.set(tasks.jar.get())
+    gameVersions.addAll(listOf(mcVersion, "1.19.1", "1.19.2", "1.19.3", "1.19.4"))
+    changelog.set(rawChangelog)
 }
 
 tasks.withType<GenerateModuleMetadata> {
