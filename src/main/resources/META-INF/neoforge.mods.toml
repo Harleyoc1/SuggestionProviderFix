@@ -1,12 +1,12 @@
 modLoader="javafml"
-loaderVersion="[47,)"
+loaderVersion="${loaderVersionRange}"
 license="MIT"
 
 [[mods]]
-modId="suggestionproviderfix"
-version="${file.jarVersion}"
 displayName="Suggestion Provider Fix"
-updateJSONURL="https://github.com/Harleyoc1/SuggestionProviderFix/blob/1.20/version_info.json?raw=true"
+modId="${modId}"
+version="${modVersion}"
+updateJSONURL="https://github.com/Harleyoc1/SuggestionProviderFix/blob/1.21/version_info.json?raw=true"
 displayURL="https://www.curseforge.com/minecraft/mc-mods/suggestion-provider-fix"
 credits=""
 authors="Harley O'Connor"
@@ -14,15 +14,19 @@ description='''
 A minor change to Minecraft's suggestion provider so that it auto-completes locations for all moded resources.
 '''
 
-[[dependencies.suggestionproviderfix]]
-    modId="forge"
+[[mixins]]
+config="${modId}.mixins.json"
+
+[[dependencies.${modId}]]
+    modId="neoforge"
     mandatory=true
-    versionRange="[47.0.3,)"
+    versionRange="${forgeVersionRange}"
     ordering="NONE"
     side="BOTH"
-[[dependencies.suggestionproviderfix]]
+
+[[dependencies.${modId}]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.20.1,1.21)"
+    versionRange="${mcVersionRange}"
     ordering="NONE"
     side="BOTH"

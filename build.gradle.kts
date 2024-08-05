@@ -1,7 +1,4 @@
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.matthewprenger.cursegradle.*
-import java.io.InputStreamReader
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
@@ -10,9 +7,7 @@ fun optionalProperty(key: String) = project.findProperty(key)?.toString()
 
 plugins {
     id("java")
-    id("net.minecraftforge.gradle")
-    id("org.parchmentmc.librarian.forgegradle")
-    id("org.spongepowered.mixin")
+    id("net.neoforged.gradle.userdev") version "7.0.145"
     id("idea")
     id("maven-publish")
     id("com.matthewprenger.cursegradle") version "1.4.0"
@@ -23,6 +18,10 @@ repositories {
     maven("https://harleyoconnor.com/maven")
 }
 
+tasks.named("wrapper", Wrapper::class).configure {
+    distributionType = Wrapper.DistributionType.BIN
+}
+
 val modName = property("modName")
 val modId = property("modId")
 val modVersion = property("modVersion")
@@ -31,93 +30,44 @@ val mcVersion = property("mcVersion")
 version = "$mcVersion-$modVersion"
 group = property("group")
 
-minecraft {
-    mappings("parchment", "${property("mappingsVersion")}-1.18.2")
+base {
+    archivesName.set(modName)
+}
 
-    runs {
-        create("client") {
-            workingDirectory = file("run").absolutePath
+runs {
+    configureEach {
+        systemProperty("forge.logging.markers", "SCAN,REGISTRIES,REGISTRYDUMP")
+        systemProperty("forge.logging.console.level", "debug")
 
-            property("forge.logging.markers", "SCAN,REGISTRIES,REGISTRYDUMP")
-            property("forge.logging.console.level", "debug")
-
-            property("mixin.debug.export", "true")
-            property("mixin.env.remapRefMap", "true")
-            property("mixin.env.refMapRemappingFile", "${buildDir}/createSrgToMcp/output.srg")
-
-            if (project.hasProperty("mcUuid")) {
-                args("--uuid", property("mcUuid"))
-            }
-            if (project.hasProperty("mcUsername")) {
-                args("--username", property("mcUsername"))
-            }
-            if (project.hasProperty("mcAccessToken")) {
-                args("--accessToken", property("mcAccessToken"))
-            }
-
-            args("-mixin.config=$modId.mixins.json")
-
-            mods {
-                create(modId) {
-                    source(sourceSets.main.get())
-                }
-            }
-        }
-
-        create("server") {
-            workingDirectory = file("run").absolutePath
-
-            property("forge.logging.markers", "SCAN,REGISTRIES,REGISTRYDUMP")
-            property("forge.logging.console.level", "debug")
-
-            property("mixin.debug.export", "true")
-            property("mixin.env.remapRefMap", "true")
-            property("mixin.env.refMapRemappingFile", "${buildDir}/createSrgToMcp/output.srg")
-
-            args("-mixin.config=$modId.mixins.json")
-
-            mods {
-                create(modId) {
-                    source(sourceSets.main.get())
-                }
-            }
-        }
-
-        create("data") {
-            workingDirectory = file("run").absolutePath
-
-            property("forge.logging.markers", "SCAN,REGISTRIES,REGISTRYDUMP")
-            property("forge.logging.console.level", "debug")
-
-            property("mixin.debug.export", "true")
-            property("mixin.env.remapRefMap", "true")
-            property("mixin.env.refMapRemappingFile", "${buildDir}/createSrgToMcp/output.srg")
-
-            args("-mixin.config=$modId.mixins.json")
-
-            args("--mod", modId, "--all", "--output", file("src/generated/resources/"), "--existing", file("src/main/resources"))
-
-            mods {
-                create(modId) {
-                    source(sourceSets.main.get())
-                }
-            }
-        }
+        modSource(project.sourceSets["main"])
     }
 }
 
-sourceSets.main.get().resources {
-    srcDir("src/generated/resources")
-}
-
-mixin {
-    add(sourceSets.main.get(), "$modId.refmap.json")
-}
-
 dependencies {
-    minecraft("net.minecraftforge:forge:$mcVersion-${property("forgeVersion")}")
+    implementation("net.neoforged:neoforge:${property("forgeVersion")}")
+}
 
-    annotationProcessor("org.spongepowered:mixin:${property("mixinVersion")}:processor")
+
+java {
+    withSourcesJar()
+
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+tasks.withType(ProcessResources::class).configureEach {
+    val replaceProperties = mapOf(
+        "mcVersionRange" to project.findProperty("mcVersionRange"),
+        "forgeVersionRange" to project.findProperty("forgeVersionRange"),
+        "loaderVersionRange" to project.findProperty("loaderVersionRange"),
+        "modId" to project.findProperty("modId"),
+        "modVersion" to project.findProperty("modVersion")
+    )
+    inputs.properties(replaceProperties)
+    filesMatching("META-INF/neoforge.mods.toml") {
+        expand(replaceProperties)
+    }
 }
 
 tasks.jar {
@@ -131,28 +81,7 @@ tasks.jar {
         "Implementation-Timestamp" to DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
         "MixinConfigs" to "$modId.mixins.json"
     )
-
-    archiveBaseName.set(modName)
-    finalizedBy("reobfJar")
 }
-
-java {
-    withSourcesJar()
-
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
-}
-
-fun readRawChangelog(): String? {
-    val versionInfoFile = file("version_info.json")
-    val jsonObject = Gson().fromJson(InputStreamReader(versionInfoFile.inputStream()), JsonObject::class.java)
-    return jsonObject
-        ?.get(mcVersion)?.asJsonObject
-        ?.get(project.version.toString())?.asString
-}
-
-val rawChangelog = readRawChangelog()!!
 
 curseforge {
     if (!project.hasProperty("curseApiKey")) {
@@ -166,8 +95,9 @@ curseforge {
         id = "469647"
 
         addGameVersion(mcVersion)
+        addGameVersion("NeoForge")
 
-        changelog = rawChangelog
+        changelog = "Changelog pending."
         changelogType = "markdown"
         releaseType = optionalProperty("versionType") ?: "release"
 
@@ -187,7 +117,7 @@ modrinth {
     versionType.set(optionalProperty("versionType") ?: "release")
     uploadFile.set(tasks.jar.get())
     gameVersions.add(mcVersion)
-    changelog.set(rawChangelog)
+    changelog.set("Changelog pending.")
 }
 
 tasks.withType<GenerateModuleMetadata> {
